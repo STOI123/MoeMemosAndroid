@@ -6,7 +6,7 @@ import me.mudkip.moememos.data.model.MemosRowStatus
 import me.mudkip.moememos.data.model.MemosVisibility
 import me.mudkip.moememos.data.model.Resource
 
-@Entity(tableName = "memos")
+@Entity(tableName = "content")
 data class MemoEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long,

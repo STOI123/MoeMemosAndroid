@@ -1,5 +1,6 @@
 package me.mudkip.moememos.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -39,6 +40,8 @@ class MemosViewModel @Inject constructor(
         private set
     var errorMessage: String? by mutableStateOf(null)
         private set
+    var refreshing by mutableStateOf(false)
+        private set
     var matrix by mutableStateOf(DailyUsageStat.initialMatrix)
         private set
 
@@ -48,21 +51,46 @@ class MemosViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    fun refresh() {
+        refreshing = true
+        loadMemos().invokeOnCompletion {
+            refreshing = false
+        }
+    }
+
     fun loadMemos() = viewModelScope.launch {
-        memoRepository.loadMemos(rowStatus = MemosRowStatus.NORMAL).suspendOnSuccess {
-            memos.clear()
-            memos.addAll(data)
+        val res = memoRepository.loadMemos(1000).await() //TODO-
+        if (res.isFailure) {
+            errorMessage = res.toString()
+            return@launch
+        }
+        memos.clear()
+        // TODO-本地loading逻辑
+        res.map {
+            // List<MemoEntity>转换为Collection<Memo>
+            val memoList = mutableListOf<Memo>()
+            Log.d("测试", "大小："+memoList.size)
+            // TODO-排序
+            it?.map{
+                val oneMemo = Memo(id = it.id, content = it.content,
+                    creatorId = it.creatorId,
+                    createdTs = it.createdTs,
+                    creatorName = it.creatorName,
+                    pinned = false,
+                    rowStatus = MemosRowStatus.NORMAL,
+                    updatedTs=it.updatedTs)
+                memoList.add(oneMemo)
+            }
+            memos.addAll(memoList)
             errorMessage = null
-        }.suspendOnErrorMessage {
-            errorMessage = it
         }
     }
 
     fun loadTags() = viewModelScope.launch {
-        memoRepository.getTags().suspendOnSuccess {
-            tags.clear()
-            tags.addAll(data)
-        }
+        val coroutineTag = memoRepository.getTags()
+        val res = coroutineTag.await()
+        tags.clear()
+        tags.addAll(res)
     }
 
     suspend fun deleteTag(name: String) = withContext(viewModelScope.coroutineContext) {

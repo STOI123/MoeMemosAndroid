@@ -6,6 +6,7 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
@@ -138,6 +139,7 @@ fun MemoInputPage(
         } catch (e: Exception) {
             e.printStackTrace()
         }
+        Timber.e("测试啊啊啊")
     }
 
     fun toggleTodoItem() {
@@ -228,13 +230,21 @@ fun MemoInputPage(
             return@launch
         }
 
-        viewModel.createMemo(text.text, currentVisibility).suspendOnSuccess {
-            text = TextFieldValue("")
-            viewModel.updateDraft("")
-            navController.popBackStack()
-        }.suspendOnErrorMessage { message ->
-            snackbarState.showSnackbar(message)
-        }
+        var result = viewModel.createMemo(text.text,
+            currentVisibility).await()
+        text = TextFieldValue("啥") //草稿字段
+        viewModel.updateDraft("content_tem_是什么")
+        navController.popBackStack()
+        Log.d("测试","成功生成"+result.toString())
+
+//        viewModel.createMemo(text.text,
+//            currentVisibility).suspendOnSuccess {
+//            text = TextFieldValue("")
+//            viewModel.updateDraft("")
+//            navController.popBackStack()
+//        }.suspendOnErrorMessage { message ->
+//            snackbarState.showSnackbar(message)
+//        }
     }
 
     fun ClipData.textList(): List<CharSequence> {
@@ -462,7 +472,7 @@ fun MemoInputPage(
             }
         }
     }
-    
+
     LaunchedEffect(Unit) {
         when {
             memo != null -> {
@@ -475,7 +485,6 @@ fun MemoInputPage(
                     uploadImage(item)
                 }
             }
-
             else -> {
                 viewModel.draft.first()?.let {
                     text = TextFieldValue(it, TextRange(it.length))

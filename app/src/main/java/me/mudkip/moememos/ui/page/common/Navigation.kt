@@ -84,15 +84,15 @@ fun Navigation() {
 
 
     LaunchedEffect(Unit) {
-        userStateViewModel.loadCurrentUser().suspendOnNotLogin {
-            if (navController.currentDestination?.route != RouteName.LOGIN) {
-                navController.navigate(RouteName.LOGIN) {
-                    popUpTo(navController.graph.startDestinationId) {
-                        inclusive = true
-                    }
-                }
-            }
-        }
+//        userStateViewModel.loadCurrentUser().suspendOnNotLogin {
+//            if (navController.currentDestination?.route != RouteName.LOGIN) {
+//                navController.navigate(RouteName.LOGIN) {
+//                    popUpTo(navController.graph.startDestinationId) {
+//                        inclusive = true
+//                    }
+//                }
+//            }
+//        }
     }
 
     fun handleIntent(intent: Intent) {

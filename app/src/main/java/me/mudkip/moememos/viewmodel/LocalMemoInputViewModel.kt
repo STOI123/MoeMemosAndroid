@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.skydoves.sandwich.ApiResponse
 import com.skydoves.sandwich.suspendOnSuccess
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -34,8 +35,10 @@ class MemoInputViewModel @Inject constructor(
     val draft = application.applicationContext.dataStore.data.map { it[DataStoreKeys.Draft.key] }
     var uploadResources = mutableStateListOf<Resource>()
 
-    suspend fun createMemo(content: String, visibility: MemosVisibility): ApiResponse<Memo> = withContext(viewModelScope.coroutineContext) {
-        memoRepository.createMemo(content, uploadResources.map { it.id }, visibility)
+    suspend fun createMemo(content: String, visibility: MemosVisibility):
+            Deferred<Result<Unit>> = withContext(viewModelScope.coroutineContext) {
+        memoRepository.createMemo(content,uploadResources.map { it.id }, visibility)
+        //ApiResponse<Memo> = withContext(viewModelScope.coroutineContext) {
     }
 
     suspend fun editMemo(memoId: Long, content: String, visibility: MemosVisibility): ApiResponse<Memo> = withContext(viewModelScope.coroutineContext) {

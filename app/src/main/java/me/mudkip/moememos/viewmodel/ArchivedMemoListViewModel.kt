@@ -1,5 +1,6 @@
 package me.mudkip.moememos.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -27,16 +28,45 @@ class ArchivedMemoListViewModel @Inject constructor(
 
     var errorMessage: String? by mutableStateOf(null)
         private set
-
     fun loadMemos() = viewModelScope.launch {
-        memoRepository.loadMemos(rowStatus = MemosRowStatus.ARCHIVED).suspendOnSuccess {
-            memos.clear()
-            memos.addAll(data)
+        val res = memoRepository.loadMemos(1000).await()
+        if (res.isFailure) {
+            errorMessage = res.toString()
+            return@launch
+        }
+        memos.clear()
+        res.map {
+            // List<MemoEntity>转换为Collection<Memo>
+            val memoList = mutableListOf<Memo>()
+            Log.d("测试", "2大小："+memoList.size)
+            res.map {
+                // List<MemoEntity>转换为Collection<Memo>
+                it?.map{
+                    val oneMemo = Memo(id = it.id, content = it.content,
+                        creatorId = it.creatorId,
+                        createdTs = it.createdTs,
+                        creatorName = it.creatorName,
+                        pinned = false,
+                        rowStatus = MemosRowStatus.NORMAL,
+                        updatedTs=it.updatedTs)
+                    memoList.add(oneMemo)
+                }
+            }
+            memos.addAll(memoList)
             errorMessage = null
-        }.suspendOnErrorMessage {
-            errorMessage = it
         }
     }
+    ////
+//    fun loadMemos() = viewModelScope.launch {
+//        //memoRepository.loadMemos(rowStatus = MemosRowStatus.ARCHIVED).suspendOnSuccess {
+//            val res = memoRepository.loadMemos(null).await()
+//            memos.clear()
+//            memos.addAll(data)
+//            errorMessage = null
+//        }.suspendOnErrorMessage {
+//            errorMessage = it
+//        }
+//    }
 
     suspend fun restoreMemo(memoId: Long) = withContext(viewModelScope.coroutineContext) {
         memoRepository.restoreMemo(memoId).suspendOnSuccess {
